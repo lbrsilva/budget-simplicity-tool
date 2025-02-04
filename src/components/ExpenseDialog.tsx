@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
+import { NumericFormat } from "react-number-format";
 import type { Expense } from "@/pages/Expenses";
 
 interface ExpenseDialogProps {
@@ -34,7 +35,8 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
   const [description, setDescription] = useState(expense?.description ?? "");
   const [isFixed, setIsFixed] = useState(expense?.isFixed ?? false);
   const [category, setCategory] = useState(expense?.category ?? categories[0]);
-  const [dueDate, setDueDate] = useState(expense?.dueDate ?? "");
+  const [dueDate, setDueDate] = useState(expense?.dueDate ? new Date(expense.dueDate).toISOString().split('T')[0] : "");
+  const [value, setValue] = useState(expense?.value ?? 0);
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -49,12 +51,21 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
       return;
     }
 
+    if (value <= 0) {
+      toast({
+        title: "Erro",
+        description: "O valor deve ser maior que zero",
+        variant: "destructive",
+      });
+      return;
+    }
+
     onSubmit({
       description,
       isFixed,
       category,
       dueDate: dueDate ? new Date(dueDate) : undefined,
-      value: 0,
+      value,
       isCreditCard: false,
       taxPercentage: 0,
       calculateTax: false,
@@ -64,6 +75,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
     setIsFixed(false);
     setCategory(categories[0]);
     setDueDate("");
+    setValue(0);
   };
 
   return (
@@ -83,6 +95,22 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
               placeholder="Digite a descrição"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="value">Valor</Label>
+            <NumericFormat
+              id="value"
+              customInput={Input}
+              value={value}
+              onValueChange={(values) => setValue(values.floatValue ?? 0)}
+              prefix="R$ "
+              decimalSeparator=","
+              thousandSeparator="."
+              decimalScale={2}
+              fixedDecimalScale
+              placeholder="R$ 0,00"
             />
           </div>
 
