@@ -36,7 +36,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
   const [isFixed, setIsFixed] = useState(expense?.isFixed ?? false);
   const [category, setCategory] = useState(expense?.category ?? categories[0]);
   const [dueDate, setDueDate] = useState(expense?.dueDate ? new Date(expense.dueDate).toISOString().split('T')[0] : "");
-  const [value, setValue] = useState(expense?.value ?? 0);
+  const [value, setValue] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,7 +51,9 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
       return;
     }
 
-    if (value <= 0) {
+    const numericValue = parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+
+    if (numericValue <= 0) {
       toast({
         title: "Erro",
         description: "O valor deve ser maior que zero",
@@ -65,7 +67,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
       isFixed,
       category,
       dueDate: dueDate ? new Date(dueDate) : undefined,
-      value,
+      value: numericValue,
       isCreditCard: false,
       taxPercentage: 0,
       calculateTax: false,
@@ -75,7 +77,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
     setIsFixed(false);
     setCategory(categories[0]);
     setDueDate("");
-    setValue(0);
+    setValue("");
   };
 
   return (
@@ -88,6 +90,22 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="value">Valor</Label>
+            <NumericFormat
+              id="value"
+              customInput={Input}
+              value={value}
+              onValueChange={(values) => setValue(values.value ?? "")}
+              prefix="R$ "
+              decimalSeparator=","
+              thousandSeparator="."
+              decimalScale={2}
+              fixedDecimalScale
+              placeholder="R$ 0,00"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
             <Input
               id="description"
@@ -95,22 +113,6 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSubmit }: Expense
               placeholder="Digite a descrição"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="value">Valor</Label>
-            <NumericFormat
-              id="value"
-              customInput={Input}
-              value={value}
-              onValueChange={(values) => setValue(values.floatValue ?? 0)}
-              prefix="R$ "
-              decimalSeparator=","
-              thousandSeparator="."
-              decimalScale={2}
-              fixedDecimalScale
-              placeholder="R$ 0,00"
             />
           </div>
 
